@@ -328,7 +328,7 @@ static void init_dtls(void)
     }
 
     /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
-    dtls_set_log_level(DTLS_LOG_DEBUG);
+    dtls_set_log_level(DTLS_LOG_NOTICE);
 
 
 }

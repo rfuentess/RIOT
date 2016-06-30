@@ -388,7 +388,7 @@ static void init_dtls(session_t *dst, char *addr_str)
     ipv6_addr_from_str(&addr_dbg, addr_str);
 
     /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
-    dtls_set_log_level(DTLS_LOG_DEBUG);
+    dtls_set_log_level(DTLS_LOG_NOTICE);
 
     dtls_context = dtls_new_context(addr_str);
     if (dtls_context) {
