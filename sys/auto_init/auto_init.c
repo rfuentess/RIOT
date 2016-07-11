@@ -24,6 +24,10 @@
 #include "config.h"
 #endif
 
+#ifdef MODULE_BMP180
+#include "bmp180.h"
+#endif
+
 #ifdef MODULE_SHT11
 #include "sht11.h"
 #endif
@@ -109,6 +113,10 @@ void auto_init(void)
     DEBUG("Auto init rtc module.\n");
     rtc_init();
 #endif
+#ifdef MODULE_BMP180
+    DEBUG("Auto init BMP180 module.\n");
+    bmp180_auto_init();
+#endif
 #ifdef MODULE_SHT11
     DEBUG("Auto init SHT11 module.\n");
     sht11_init();
@@ -165,6 +173,11 @@ void auto_init(void)
 #ifdef MODULE_AT86RF2XX
     extern void auto_init_at86rf2xx(void);
     auto_init_at86rf2xx();
+#endif
+
+#ifdef MODULE_CC2420
+    extern void auto_init_cc2420(void);
+    auto_init_cc2420();
 #endif
 
 #ifdef MODULE_ENCX24J600
@@ -256,4 +269,13 @@ void auto_init(void)
 #endif
 
 #endif /* MODULE_AUTO_INIT_SAUL */
+
+#ifdef MODULE_AUTO_INIT_GNRC_RPL
+
+#ifdef MODULE_GNRC_RPL
+    extern void auto_init_gnrc_rpl(void);
+    auto_init_gnrc_rpl();
+#endif
+
+#endif /* MODULE_AUTO_INIT_GNRC_RPL */
 }
