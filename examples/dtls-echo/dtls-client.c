@@ -62,7 +62,9 @@
 
 #endif /* DTLS_PSK */
 
-#define DEFAULT_PORT 20220
+//#define DEFAULT_PORT 20220
+#define DEFAULT_PORT 61618
+
 #define CLIENT_PORT  DEFAULT_PORT + 1
 #define MAX_TIMES_TRY_TO_SEND 10
 
@@ -388,7 +390,8 @@ static void init_dtls(session_t *dst, char *addr_str)
     ipv6_addr_from_str(&addr_dbg, addr_str);
 
     /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
-    dtls_set_log_level(DTLS_LOG_NOTICE);
+   // dtls_set_log_level(DTLS_LOG_NOTICE);
+   dtls_set_log_level(DTLS_LOG_DEBUG);
 
     dtls_context = dtls_new_context(addr_str);
     if (dtls_context) {

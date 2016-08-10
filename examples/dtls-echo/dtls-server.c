@@ -36,12 +36,13 @@
 #include "dtls_debug.h"
 #include "tinydtls.h"
 
-#define ENABLE_DEBUG  0
+#define ENABLE_DEBUG  1
 #ifdef ENABLE_DEBUG
 #include "debug.h"
 #endif
 
-#define DEFAULT_PORT 20220
+//#define DEFAULT_PORT 20220
+#define DEFAULT_PORT 61618
 
 /* TODO: MAke this local! */
 static dtls_context_t *dtls_context = NULL;
@@ -328,8 +329,8 @@ static void init_dtls(void)
     }
 
     /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
-    dtls_set_log_level(DTLS_LOG_NOTICE);
-
+    //dtls_set_log_level(DTLS_LOG_NOTICE);
+    dtls_set_log_level(DTLS_LOG_DEBUG);
 
 }
 
