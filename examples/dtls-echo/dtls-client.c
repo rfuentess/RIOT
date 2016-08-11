@@ -262,6 +262,9 @@ static int gnrc_sending(char *addr_str, char *data, size_t data_len )
         gnrc_pktbuf_release(udp);
         return -1;
     }
+    
+    /*WARNING: Too fast and the nodes dies in middle of retransmissions */
+    xtimer_usleep(9000000);
 
     /* send packet */
     if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, ip)) {
