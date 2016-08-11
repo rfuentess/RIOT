@@ -123,10 +123,11 @@ static int read_from_peer(struct dtls_context_t *ctx,
 {
     size_t i;
 
-    puts("\nData from peer (Client): ---");
+
+    printf("\nData from peer (Client): ---");
     for (i = 0; i < len; i++)
         printf("%c", data[i]);
-    puts("---\n Send echo");
+    printf("--- \t Sending echo..\n");
 
     /* echo incoming application data */
     dtls_write(ctx, session, data, len);
