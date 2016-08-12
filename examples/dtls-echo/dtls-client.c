@@ -29,6 +29,10 @@
 #include "net/gnrc/pktdump.h"
 #include "timex.h"
 #include "xtimer.h"
+
+#define ENABLE_DEBUG  (0)
+#include "debug.h"
+
 //# include "byteorder.h"
 
 /* TinyDTLS */
@@ -37,10 +41,6 @@
 #include "dtls.h"
 #include "global.h"
 
-#define ENABLE_DEBUG  0
-#ifdef ENABLE_DEBUG
-#include "debug.h"
-#endif
 
 
 /* TODO: Remove the UNUSED_PARAM from TinyDTLS' stack? */
@@ -264,7 +264,7 @@ static int gnrc_sending(char *addr_str, char *data, size_t data_len )
     }
     
     /*WARNING: Too fast and the nodes dies in middle of retransmissions */
-    xtimer_usleep(9000000);
+    xtimer_usleep(1000000);
 
     /* send packet */
     if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, ip)) {
@@ -307,8 +307,6 @@ static void try_send(struct dtls_context_t *ctx, session_t *dst)
     int res;
 
     res = dtls_write(ctx, dst, (uint8_t *)client_payload, buflen);
-
-    DEBUG("DBG-Client trying to send DTLS packet\n");
 
     if (res >= 0) {
         memmove(client_payload, client_payload + res, buflen - res);
@@ -372,6 +370,7 @@ static void init_dtls(session_t *dst, char *addr_str)
     puts("Client support ECC");
 #endif
 
+    DEBUG("DBG-Client: Debug ON");
     /*
      *  The objective of ctx->App  is be able to retrieve
      *  enough information for restablishing a connection.
@@ -394,14 +393,14 @@ static void init_dtls(session_t *dst, char *addr_str)
 
     /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
    // dtls_set_log_level(DTLS_LOG_NOTICE);
-   dtls_set_log_level(DTLS_LOG_DEBUG);
+   dtls_set_log_level(DTLS_LOG_INFO);
 
     dtls_context = dtls_new_context(addr_str);
     if (dtls_context) {
         dtls_set_handler(dtls_context, &cb);
     }
 
-    DEBUG("DBG-Client: init_dtls Finish\n");
+
     return;
 
 }
@@ -499,7 +498,7 @@ static void client_send(char *addr_str, char *data, unsigned int delay)
     connected = 0; /*Probably this should be removed or global */
 
     /* Permanent or not permanent? */
-    DEBUG("DTLS session finished\n");
+    DEBUG("DTLS-Client: DTLS session finished\n");
 }
 
 
