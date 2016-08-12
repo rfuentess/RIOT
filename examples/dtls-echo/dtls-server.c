@@ -30,6 +30,7 @@
 #include "timex.h"
 #include "xtimer.h"
 #include "msg.h"
+#include "debug.h"
 
 /* TinyDTLS */
 #include "dtls.h"
@@ -37,12 +38,9 @@
 #include "tinydtls.h"
 
 #define ENABLE_DEBUG  1
-#ifdef ENABLE_DEBUG
-#include "debug.h"
-#endif
 
-//#define DEFAULT_PORT 20220
-#define DEFAULT_PORT 61618
+//#define DEFAULT_PORT 20220    /* DTLS default port  */
+#define DEFAULT_PORT 61618      /* First valid FEBx address  */
 
 /* TODO: MAke this local! */
 static dtls_context_t *dtls_context = NULL;
@@ -123,12 +121,12 @@ static int read_from_peer(struct dtls_context_t *ctx,
 {
     size_t i;
 
-
-    printf("\nData from peer (Client): ---");
+#if ENABLE_DEBUG == 1
+    DEBUG("\nDBG-Server: Data from Client: ---");
     for (i = 0; i < len; i++)
-        printf("%c", data[i]);
-    printf("--- \t Sending echo..\n");
-
+        DEBUG("%c", data[i]);
+    DEBUG("--- \t Sending echo..\n");
+#endif
     /* echo incoming application data */
     dtls_write(ctx, session, data, len);
     return 0;
@@ -172,6 +170,9 @@ static int gnrc_sending(char *addr_str, char *data, size_t data_len, unsigned sh
         return -1;
     }
     /* send packet */
+    
+    DEBUG("DBG-Server: Sending record to peer\n")
+    
     /* Probably this part will be removed.  **/
     if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, ip)) {
         puts("Error: unable to locate UDP thread");
@@ -331,7 +332,7 @@ static void init_dtls(void)
 
     /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
     //dtls_set_log_level(DTLS_LOG_NOTICE);
-    dtls_set_log_level(DTLS_LOG_DEBUG);
+    dtls_set_log_level(DTLS_LOG_INFO);
 
 }
 
@@ -360,7 +361,7 @@ void *dtls_server_wrapper(void *arg)
         /* wait for a message */
         msg_receive(&msg);
 
-        DEBUG("DBG-Server: Client request!\n");
+        DEBUG("DBG-Server: Record Rcvd!\n");
         dtls_handle_read(dtls_context, (gnrc_pktsnip_t *)(msg.content.ptr));
 
         /*TODO: What happens with other clients connecting at the same time? */
