@@ -119,10 +119,11 @@ static void dtls_handle_read(dtls_context_t *ctx, gnrc_pktsnip_t *pkt)
 static int read_from_peer(struct dtls_context_t *ctx,
                           session_t *session, uint8 *data, size_t len)
 {
-    size_t i;
+    
 
 #if ENABLE_DEBUG == 1
-    DEBUG("\nDBG-Server: Data from Client: ---");
+  size_t i;  
+  DEBUG("\nDBG-Server: Data from Client: ---");
     for (i = 0; i < len; i++)
         DEBUG("%c", data[i]);
     DEBUG("--- \t Sending echo..\n");
