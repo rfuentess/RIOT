@@ -30,14 +30,15 @@
 #include "timex.h"
 #include "xtimer.h"
 #include "msg.h"
-#include "debug.h"
+
 
 /* TinyDTLS */
 #include "dtls.h"
 #include "dtls_debug.h"
 #include "tinydtls.h"
 
-#define ENABLE_DEBUG  1
+#define ENABLE_DEBUG  (1)
+#include "debug.h"
 
 //#define DEFAULT_PORT 20220    /* DTLS default port  */
 #define DEFAULT_PORT 61618      /* First valid FEBx address  */
@@ -172,7 +173,10 @@ static int gnrc_sending(char *addr_str, char *data, size_t data_len, unsigned sh
     }
     /* send packet */
     
-    DEBUG("DBG-Server: Sending record to peer\n")
+    DEBUG("DBG-Server: Sending record to peer\n");
+
+    /*WARNING: Too fast and the nodes dies in middle of retransmissions */
+    xtimer_usleep(250000);
     
     /* Probably this part will be removed.  **/
     if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, ip)) {
@@ -310,6 +314,8 @@ static void init_dtls(void)
     puts("Server support ECC");
 #endif
 
+    DEBUG("DBG-Server On\n");
+    
     /*
      * The context for the server is a little different from the client.
      * The simplicity of GNRC do not mix transparently with
@@ -321,6 +327,11 @@ static void init_dtls(void)
      * For now, the first value will be the loopback.
      */
     char *addr_str = "::1";
+    
+    /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
+    //dtls_set_log_level(DTLS_LOG_NOTICE);
+    dtls_set_log_level(DTLS_LOG_INFO);
+    
 
     dtls_context = dtls_new_context(addr_str);
     if (dtls_context) {
@@ -331,9 +342,7 @@ static void init_dtls(void)
         exit(-1);
     }
 
-    /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
-    //dtls_set_log_level(DTLS_LOG_NOTICE);
-    dtls_set_log_level(DTLS_LOG_INFO);
+
 
 }
 
