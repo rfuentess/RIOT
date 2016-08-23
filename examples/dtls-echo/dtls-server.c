@@ -176,7 +176,7 @@ static int gnrc_sending(char *addr_str, char *data, size_t data_len, unsigned sh
     DEBUG("DBG-Server: Sending record to peer\n");
 
     /*WARNING: Too fast and the nodes dies in middle of retransmissions */
-    xtimer_usleep(250000);
+    xtimer_usleep(500000);
     
     /* Probably this part will be removed.  **/
     if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, ip)) {
