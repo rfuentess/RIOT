@@ -25,7 +25,7 @@ USEMODULE += gnrc_udp
 # Add a routing protocol
 USEMODULE += gnrc_rpl
 # This application dumps received packets to STDIO using the pktdump module
-USEMODULE += gnrc_pktdump
+#USEMODULE += gnrc_pktdump
 # Additional networking modules that can be dropped if not needed
 USEMODULE += gnrc_icmpv6_echo
 # Add also the shell, some shell commands
@@ -44,15 +44,21 @@ CFLAGS += -DDEVELHELP
 # NOTE: The configuration for socket or non-socket can be handled here.
 CFLAGS += -DWITH_RIOT_GNRC
 
-# NOTE: Those are taken from TinyDTLS (As the original Makefiles are
+# NOTE: Those are taken from TinyDTLS. As the original Makefiles are
 #      overwitten is a good idea to preserve them here.
 CFLAGS += -DDTLSv12 -DWITH_SHA256
 
-# This adds support for TLS_PSK_WITH_AES_128_CCM_8
+# NOTE: This adds support for TLS_PSK_WITH_AES_128_CCM_8
 CFLAGS += -DDTLS_PSK
 
-# This adds support for TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
+# NOTE: This adds support for TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
 CFLAGS += -DDTLS_ECC
+
+# NOTE: If enabled TinyDTLS' log are disabled (if memory is a issue).
+# WARNING: Sometimes the log leads to Stack pointer corrupted. 
+#          The reason is not identified yet. 
+#          If said issue appears, enable this line.
+CFLAGS += -DNDEBUG
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1

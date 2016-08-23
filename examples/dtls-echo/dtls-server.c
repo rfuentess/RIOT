@@ -416,6 +416,9 @@ static void stop_server(void)
         printf("Error: server was not running\n");
         return;
     }
+
+    dtls_free_context(dtls_context);
+
     /* stop server */
     gnrc_netreg_unregister(GNRC_NETTYPE_UDP, &server);
     server.pid = KERNEL_PID_UNDEF;
