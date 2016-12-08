@@ -70,6 +70,8 @@ static dtls_context_t *dtls_context = NULL;
 static char *client_payload;
 static size_t buflen = 0;
 
+
+#ifdef DTLS_ECC
 static const unsigned char ecdsa_priv_key[] = {
     0x41, 0xC1, 0xCB, 0x6B, 0x51, 0x24, 0x7A, 0x14,
     0x43, 0x21, 0x43, 0x5B, 0x7A, 0x80, 0xE7, 0x14,
@@ -90,7 +92,7 @@ static const unsigned char ecdsa_pub_key_y[] = {
     0xE9, 0x3F, 0x98, 0x72, 0x09, 0xDA, 0xED, 0x0B,
     0x4F, 0xAB, 0xC3, 0x6F, 0xC7, 0x72, 0xF8, 0x29
 };
-
+#endif
 
 /**
  * @brief This care about getting messages and continue with the DTLS flights.
@@ -154,11 +156,9 @@ static int peer_get_psk_info(struct dtls_context_t *ctx UNUSED_PARAM,
 
     switch (type) {
         case DTLS_PSK_IDENTITY:
-            /* Removed due probably in the motes is useless
                if (id_len) {
                dtls_debug("got psk_identity_hint: '%.*s'\n", id_len, id);
                }
-             */
 
             if (result_length < psk_id_length) {
                 dtls_warn("cannot set psk_identity -- buffer too small\n");
@@ -395,7 +395,7 @@ static void init_dtls(session_t *dst, char *addr_str)
 
     /*akin to syslog: EMERG, ALERT, CRITC, NOTICE, INFO, DEBUG */
     dtls_set_log_level(DTLS_LOG_NOTICE);
-
+    
     dtls_context = dtls_new_context(addr_str);
     if (dtls_context) {
         dtls_set_handler(dtls_context, &cb);
