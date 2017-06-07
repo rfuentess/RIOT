@@ -92,6 +92,10 @@
 #include "ota_update.h"
 #endif
 
+#ifdef MODULE_GNRC_DTLS
+#include "net/dtls/gdtls.h"
+#endif
+
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
@@ -151,6 +155,10 @@ void auto_init(void)
 #ifdef MODULE_OPENTHREAD
     extern void openthread_bootstrap(void);
     openthread_bootstrap();
+#endif
+#ifdef MODULE_GNRC_DTLS
+    DEBUG("Auto init gnrc_dtls module.\n");
+    gnrc_dtls_init();
 #endif
 #ifdef MODULE_GCOAP
     DEBUG("Auto init gcoap module.\n");

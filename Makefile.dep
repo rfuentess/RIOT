@@ -642,6 +642,10 @@ ifneq (,$(filter spiffs,$(USEMODULE)))
   USEMODULE += mtd
 endif
 
+ifneq (,$(filter gnrc_dtls,$(USEMODULE)))
+  USEPKG += tinydtls
+endif
+
 ifneq (,$(filter l2filter_%,$(USEMODULE)))
   USEMODULE += l2filter
 endif
