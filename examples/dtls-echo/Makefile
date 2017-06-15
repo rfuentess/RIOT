@@ -38,15 +38,16 @@ USEMODULE += shell
 USEMODULE += shell_commands
 USEMODULE += ps
 
-#TinyDTLs (crypto.c) made use of pthread
- ifneq ($(BOARD),native)
- USEMODULE += pthread
- endif
 
-# Comment this out to disable code in RIOT that does safety checking
-# which is not needed in a production environment but helps in the
-# development process:
-CFLAGS += -DDEVELHELP
+# Uncomment to redefine port. Default: DTLS port (20220). Useful for FEBx range
+#DTLS_PORT = 20220
+#CFLAGS += -DDTLS_DEFAULT_PORT=$(DTLS_PORT)
+
+# DTLS-client will generate a "CoAP get /riot/value" message instead of
+# sending the user input
+#CFLAGS += -DCOAP_MSG_SPOOF
+
+# NOTE: The following lines are custom configuration for TinyDTLS
 
 # NOTE: Add the package for TinyDTLS
 USEPKG += tinydtls
@@ -69,6 +70,11 @@ CFLAGS += -DDTLS_ECC
 
 # NOTE: The configuration for socket or non-socket  communication in TinyDTLS.
 CFLAGS += -DWITH_RIOT_GNRC
+
+# Comment this out to disable code in RIOT that does safety checking
+# which is not needed in a production environment but helps in the
+# development process:
+CFLAGS += -DDEVELHELP
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
