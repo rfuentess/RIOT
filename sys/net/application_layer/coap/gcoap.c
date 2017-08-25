@@ -149,7 +149,7 @@ int _read_from_peer(struct dtls_context_t *ctx, session_t *session,
         _find_req_memo(&memo, &pdu, data, len);
         if (memo) {
             xtimer_remove(&memo->response_timer);
-            memo->resp_handler(memo->state, &pdu);
+            memo->resp_handler(memo->state, &pdu, remote_peer->remote);
             memo->state = GCOAP_MEMO_UNUSED;
         }
     }
