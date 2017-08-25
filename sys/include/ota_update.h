@@ -48,7 +48,7 @@ extern "C" {
  * @brief Default CoAP updates server port
  */
 #ifndef OTA_SERVER_COAP_PORT
-#define OTA_SERVER_COAP_PORT      "5683"
+#define OTA_SERVER_COAP_PORT      "5684"
 #endif
 
 /**
