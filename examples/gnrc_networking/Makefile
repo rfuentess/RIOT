@@ -1,9 +1,7 @@
 # name of your application
 APPLICATION = gnrc_networking
 
-# If no BOARD is found in the environment, use this default:
-BOARD ?= native
-
+BOARD ?= iotlab-a8-m3
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../..
 
@@ -52,6 +50,22 @@ CFLAGS += -DDEVELHELP
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
+
+#NOTE: 0xBB1 - samr21-xpro;  0xBB2 - iotlab-m3;  0xBB3 - iotlab-a8-m3
+#OTA_SERVER_ADDRESS ?= "2001:dead:beef::1"
+#CFLAGS += -DOTA_SERVER_ADDRESS="2001:dead:beef::1"
+USEMODULE += gnrc_dtls
+USEMODULE += ota_update_tftp
+
+FW_APPID ?= 0xBB3
+FW_VERSION ?= 0x1
+
+# DIR_KEYS ?= $(CURDIR)/Keys
+# PUBKEY ?= $(DIR_KEYS)/ed25519.pub
+# SECKEY ?= $(DIR_KEYS)/ed25519.sec
+
+# DTLS_PORT = 5684
+# CFLAGS += -DOTA_SERVER_COAP_PORT=$(DTLS_PORT)
 
 include $(RIOTBASE)/Makefile.include
 
