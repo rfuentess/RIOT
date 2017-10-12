@@ -48,7 +48,11 @@ extern "C" {
  * @brief Default CoAP updates server port
  */
 #ifndef OTA_SERVER_COAP_PORT
+#ifndef MODULE_GNRC_DTLS
+#define OTA_SERVER_COAP_PORT      "5683"
+#else
 #define OTA_SERVER_COAP_PORT      "5684"
+#endif
 #endif
 
 /**
