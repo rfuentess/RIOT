@@ -50,7 +50,7 @@ int main(void)
     msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
     puts("RIOT (Tiny)DTLS testing implementation");
 
-    /*TinyDTLS settings (Universal and called only once time by reboot) */
+    /*TinyDTLS settings (Universal and called only one time by reboot) */
     dtls_init();
 
     /* start shell */

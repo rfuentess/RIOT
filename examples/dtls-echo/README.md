@@ -6,32 +6,26 @@ This example shows how to use TinyDTLS with sock_udp.
 
 This example is configured to use socks instead of sockets (over GNRC).
 It's possible to use sockets, which give a more similar approach to the original
-Linux version of TinyDTLS. However, is not tested yet.
+Linux version of TinyDTLS. However, this is not tested yet.
 
 ## Fast configuration (Between RIOT instances):
 
 Preparing the logical interfaces:
 
-```
-./../../dist/tools/tapsetup/tapsetup --create 2
-```
+    ./../../dist/tools/tapsetup/tapsetup --create 2
 
 For the server instance:
 
-```
-PORT=tap1 make all term
-dtlss start
-ifconfig
-```
+    make all; PORT=tap1 make term
+    dtlss start
+    ifconfig
 
 Do not forget to copy the IPv6 addresses!
 
 For the client:
 
-```
-PORT=tap0 make term
-dtlsc <IPv6's server address[%netif]> "DATA to send under encrypted channel!"
-```
+    PORT=tap0 make term
+    dtlsc <IPv6's server address[%netif]> "DATA to send under encrypted channel!"
 
 # Testings
 ## Boards
@@ -49,14 +43,14 @@ The code has been tested in the FIT IOT-LAB tesbed with the remote
 
 ## Handling the static memory allocation
 
-TinyDTLS for RIOT O.S. is using the `sys/memarray` module and therefore there
+TinyDTLS for RIOT is using the `sys/memarray` module and therefore there
 are certain limits. Said resources are defined in
 `tinydtls/platform-specific/riot_boards.h`, but can be overwritten at
-compilation time. Their default values are considered for having two DTLS
+compile time. Their default values are considered for having two DTLS
 contexts (for purpose of DTLS renegotiation).
 
 The resources handled by memarray are:
-* `DTLS_CONTEXT_MAX` (default 2) The maximum number of DTLS  context at the
+* `DTLS_CONTEXT_MAX` (default 2) The maximum number of DTLS context at the
    same time.
 * `DTLS_PEER_MAX` (default 1) The maximum number DTLS peers (i.e. sessions).
 * `DTLS_HANDSHAKE_MAX` (default 1) The maximum number of concurrent DTLS handshakes.
