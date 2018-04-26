@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2015 Freie Universität Berlin
  * Copyright (C) 2018 Inria
  *
  * This file is subject to the terms and conditions of the GNU Lesser
@@ -50,6 +51,7 @@
 
 #define CLIENT_PORT DTLS_DEFAULT_PORT + 1
 #define MAX_TIMES_TRY_TO_SEND 10
+#define DEFAULT_DELAY 100
 
 static int dtls_connected = 0; /* This is handled by Tinydtls' callbacks */
 
@@ -90,7 +92,7 @@ static int _events_handler(struct dtls_context_t *ctx,
         dtls_connected = 1;
         DEBUG("CLIENT: DTLS Channel established!\n");
     }
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG
     /* At least a DTLS Client Hello was prepared? */
     else if (code == DTLS_EVENT_CONNECT) {
         DEBUG("CLIENT: DTLS Channel started\n");
@@ -125,7 +127,7 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet,
     }
 
     sock_udp_t *sock;
-    sock =  (sock_udp_t *) dtls_get_app_data(ctx);
+    sock =  (sock_udp_t *)dtls_get_app_data(ctx);
 
 
     if (sock_udp_get_remote(sock, &Aux) == -ENOTCONN) {
@@ -148,13 +150,13 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet,
         return;
     }
 
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG
     DEBUG("DBG-Client: Msg received from \n\t Addr Src: [");
     ipv6_addr_print(&session.addr);
     DEBUG("]:%u\n", &Aux.port);
 #endif
 
-    dtls_handle_message(ctx, &session, packet, (int) size);
+    dtls_handle_message(ctx, &session, packet, (int)size);
 
     return;
 }
@@ -268,7 +270,7 @@ static int _read_from_peer_handler(struct dtls_context_t *ctx,
 #else
         printf("%X  ", data[i]);
 #endif
-    printf(" --\n");
+    puts(" --");
 
     /*
      * NOTE: To answer the other peer uses dtls_write(). E.g.
@@ -291,7 +293,7 @@ ssize_t try_send(struct dtls_context_t *ctx, session_t *dst, uint8 *buf, size_t 
         return len;
     }
     else if (res < 0) {
-        dtls_crit("Client: dtls_write returned error!\n" );
+        dtls_crit("Client: dtls_write returned error!\n");
         return -1;
     }
 
@@ -312,10 +314,10 @@ static int _send_to_peer_handler(struct dtls_context_t *ctx,
     }
 
     sock_udp_t *sock;
-    sock = (sock_udp_t *) dtls_get_app_data(ctx);
+    sock = (sock_udp_t *)dtls_get_app_data(ctx);
 
     len = sock_udp_send(sock, buf, len, NULL);
-    if (!(len > 0)) {
+    if (len <= 0) {
         puts("ERROR: Unable to send DTLS record");
     }
 
@@ -362,7 +364,6 @@ dtls_context_t *_init_dtls(sock_udp_t *sock, sock_udp_ep_t *local,
     /* Parsing <address>[:<iface>]:Port */
     int iface = ipv6_addr_split_iface(addr_str);
     if (iface == -1) {
-
         if (gnrc_netif_numof() == 1) {
             /* assign the single interface found in gnrc_netif_numof() */
             dst->ifindex = (uint16_t)gnrc_netif_iter(NULL)->pid;
@@ -456,7 +457,7 @@ static void client_send(char *addr_str, char *data,
     }
 
     /*
-     * Starts the DTLS handshake process by sending the firts DTLS Hello Client
+     * Starts the DTLS handshake process by sending the first DTLS Hello Client
      * record.
      *
      * NOTE: If dtls_connect() returns zero, then the DTLS channel for the
@@ -468,9 +469,9 @@ static void client_send(char *addr_str, char *data,
     }
 
     /*
-     * This loop has as objective to transmit all the DTLS records involved
-     * in the DTLS session. Including the real (upper) data to send and to
-     * receive. There is a watchdog if the remote peer stop answering.
+     * This loop transmits all the DTLS records involved in the DTLS session.
+     * Including the real (upper) data to send and to receive. There is a
+     * watchdog if the remote peer stop answering.
      *
      * Max lifetime expected for a DTLS handshake is 10 sec. This is reflected
      * with the variable watch and the timeout for sock_udp_recv().
@@ -484,10 +485,10 @@ static void client_send(char *addr_str, char *data,
     while ((app_data_buf > 0) && (watch > 0)) {
 
         /*  DTLS Session must be established before sending our data */
-        if (dtls_connected == 1) {
-            DEBUG("Sending (upper layer) data\n" );
+        if (dtls_connected) {
+            DEBUG("Sending (upper layer) data\n");
             app_data_buf = try_send(dtls_context, &dst,
-                                    (uint8 *) client_payload, app_data_buf);
+                                    (uint8 *)client_payload, app_data_buf);
 
             if (app_data_buf == 0) { /* Client only transmit data one time. */
                 watch = 0;
@@ -498,9 +499,9 @@ static void client_send(char *addr_str, char *data,
                                        1 * US_PER_SEC, &remote);
 
         if (pckt_rcvd_size >= 0) {
-            dtls_handle_read(dtls_context, packet_rcvd, pckt_rcvd_size );
+            dtls_handle_read(dtls_context, packet_rcvd, pckt_rcvd_size);
         }
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG
         else {
             switch (pckt_rcvd_size) {
                 case -ENOBUFS:
@@ -532,7 +533,7 @@ static void client_send(char *addr_str, char *data,
                 default:
                     printf("ERROR: unexpected code error: %i\n", pckt_rcvd_size);
                     break;
-            }     /* END-Switch */
+            } /* END-Switch */
         } /*END-Else */
 #endif
 
@@ -569,7 +570,7 @@ static void client_send(char *addr_str, char *data,
 
 int udp_client_cmd(int argc, char **argv)
 {
-    uint32_t delay = 100;
+    uint32_t delay = DEFAULT_DELAY;
 
 #ifndef COAP_MSG_SPOOF
     if (argc < 3) {

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Freie Universität Berlin
+ * Copyright (C) 2018 Inria
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -116,7 +117,7 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet, size_t size)
     }
 
     dtls_remote_peer_t *remote_peer;
-    remote_peer = (dtls_remote_peer_t *) dtls_get_app_data(ctx);
+    remote_peer = (dtls_remote_peer_t *)dtls_get_app_data(ctx);
 
     /* (DTLS) session requires the remote peer address (IPv6:Port) and netif */
     session.size = sizeof(uint8_t) * 16 + sizeof(unsigned short);
@@ -133,7 +134,7 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet, size_t size)
         return;
     }
 
-    dtls_handle_message(ctx, &session, packet, (int) size);
+    dtls_handle_message(ctx, &session, packet, (int)size);
 
     return;
 }
@@ -152,7 +153,7 @@ static int _read_from_peer_handler(struct dtls_context_t *ctx,
         printf("%2X", data[i]);
 #endif
     }
-    printf(" ---\t(echo!)\n");
+    puts(" ---\t(echo!)");
 
     /* echo back the application data rcvd. */
     return dtls_write(ctx, session, data, len);
@@ -164,8 +165,8 @@ static int _send_to_peer_handler(struct dtls_context_t *ctx,
 {
 
     /*
-     * It's possible to create an sock_udp_ep_t variable. But, it's required
-     *  to copy memory from the session variable to it.
+     * It's possible to create a sock_udp_ep_t variable. But, it's required
+     * to copy memory from the session variable to it.
      */
     (void) session;
 
@@ -177,7 +178,7 @@ static int _send_to_peer_handler(struct dtls_context_t *ctx,
     }
 
     dtls_remote_peer_t *remote_peer;
-    remote_peer =  (dtls_remote_peer_t *) dtls_get_app_data(ctx);
+    remote_peer = (dtls_remote_peer_t *)dtls_get_app_data(ctx);
 
     DEBUG("DBG-Server: Sendinng record\n");
 
@@ -374,9 +375,9 @@ void *_dtls_server_wrapper(void *arg)
                                            10 * US_PER_SEC, &remote);
             if (pckt_rcvd_size >= 0) {
                 DEBUG("DBG-Server: Record Rcvd\n");
-                dtls_handle_read(dtls_context, pckt_rcvd, pckt_rcvd_size );
+                dtls_handle_read(dtls_context, pckt_rcvd, pckt_rcvd_size);
             }
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG
             else {
                 switch (pckt_rcvd_size) {
                     case -ENOBUFS:
@@ -408,11 +409,11 @@ void *_dtls_server_wrapper(void *arg)
                     default:
                         printf("ERROR: unexpected code error: %i", pckt_rcvd_size);
                         break;
-                }   /* END-Switch */
-            }       /*END-Else (sock_udp_recv) */
+                } /* END-Switch */
+            } /*END-Else (sock_udp_recv) */
 #endif
-        }           /* END-Else (thread message)*/
-    }               /*End-While */
+        } /* END-Else (thread message)*/
+    } /*End-While */
 
     /* Release resoruces (strict order) */
     dtls_free_context(dtls_context); /* This also send a DTLS Alert record */
@@ -462,11 +463,8 @@ static void stop_server(void)
     }
 
     /* prepare the stop message */
-    msg_t m = {
-        thread_getpid(),
-        DTLS_STOP_SERVER_MSG,
-        { NULL }
-    };
+    msg_t m;
+    m.type = DTLS_STOP_SERVER_MSG;
 
     DEBUG("Stopping server...\n");
 
@@ -490,7 +488,7 @@ int udp_server_cmd(int argc, char **argv)
         stop_server();
     }
     else {
-        puts("Error: invalid command");
+        printf("Error: invalid command. Usage: %s start|stop\n", argv[0]);
     }
     return 0;
 }

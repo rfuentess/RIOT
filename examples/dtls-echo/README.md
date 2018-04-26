@@ -33,11 +33,6 @@ For the client:
 Boards that do not support the `../gnrc_networking` example are included
 in the `BOARD_INSUFFICIENT_MEMORY`, plus the board `cc2650stk`.
 
-There are certain boards that are having issues with `crypto.c` and
-`dtls_time.h` Which for now are in the the `BOARD_BLACKLIST`.
-
-The boards that requires `periph_conf.h` are not tested.
-
 The code has been tested in the FIT IOT-LAB tesbed with the remote
 `iotlab-m3` and `iotlab-a8-m3` boards and with local `samr21-xpro` boards.
 
