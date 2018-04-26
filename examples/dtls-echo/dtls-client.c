@@ -114,7 +114,7 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet,
                              size_t size)
 {
     static session_t session;
-    static sock_udp_ep_t Aux = SOCK_IPV6_EP_ANY;
+    static sock_udp_ep_t remote = SOCK_IPV6_EP_ANY;
 
     if (!ctx) {
         DEBUG("%s: No DTLS context\n", __func__);
@@ -130,22 +130,22 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet,
     sock =  (sock_udp_t *)dtls_get_app_data(ctx);
 
 
-    if (sock_udp_get_remote(sock, &Aux) == -ENOTCONN) {
+    if (sock_udp_get_remote(sock, &remote) == -ENOTCONN) {
         DEBUG("%s: Unable to retrieve remote!\n", __func__);
         return;
     }
 
     /* session requires the remote socket (IPv6:UDP) address and netif  */
     session.size = sizeof(uint8_t) * 16 + sizeof(unsigned short);
-    session.port = Aux.port;
-    if (&Aux.netif ==  SOCK_ADDR_ANY_NETIF) {
+    session.port = remote.port;
+    if (&remote.netif ==  SOCK_ADDR_ANY_NETIF) {
         session.ifindex  = SOCK_ADDR_ANY_NETIF;
     }
     else {
-        session.ifindex  = Aux.netif;
+        session.ifindex  = remote.netif;
     }
 
-    if (memcpy(&session.addr, &Aux.addr.ipv6, 16) == NULL) {
+    if (memcpy(&session.addr, &remote.addr.ipv6, 16) == NULL) {
         puts("ERROR: memcpy failed!");
         return;
     }
@@ -153,7 +153,7 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet,
 #if ENABLE_DEBUG
     DEBUG("DBG-Client: Msg received from \n\t Addr Src: [");
     ipv6_addr_print(&session.addr);
-    DEBUG("]:%u\n", &Aux.port);
+    DEBUG("]:%u\n", &remote.port);
 #endif
 
     dtls_handle_message(ctx, &session, packet, (int)size);
