@@ -305,7 +305,7 @@ dtls_context_t *_server_init_dtls(dtls_remote_peer_t *remote_peer)
 
     /*
      * The context for the server is different from the client.
-     * TThis is because sock_udp_create() cannot work with a remote endpoint
+     * This is because sock_udp_create() cannot work with a remote endpoint
      * with port set to 0. And even after sock_udp_recv(), sock_udp_get_remote()
      * cannot retrieve the remote.
      */
@@ -377,8 +377,7 @@ void *_dtls_server_wrapper(void *arg)
                 DEBUG("DBG-Server: Record Rcvd\n");
                 dtls_handle_read(dtls_context, pckt_rcvd, pckt_rcvd_size);
             }
-#if ENABLE_DEBUG
-            else {
+            else if (ENABLE_DEBUG) {
                 switch (pckt_rcvd_size) {
                     case -ENOBUFS:
                         puts("ERROR: Buffer space not enough large!");
@@ -407,18 +406,17 @@ void *_dtls_server_wrapper(void *arg)
                         break;
 
                     default:
-                        printf("ERROR: unexpected code error: %i", pckt_rcvd_size);
+                        printf("ERROR: unexpected code error: %i\n", pckt_rcvd_size);
                         break;
                 } /* END-Switch */
             } /*END-Else (sock_udp_recv) */
-#endif
         } /* END-Else (thread message)*/
     } /*End-While */
 
     /* Release resoruces (strict order) */
-    dtls_free_context(dtls_context); /* This also send a DTLS Alert record */
+    dtls_free_context(dtls_context); /* This also sends a DTLS Alert record */
     sock_udp_close(&udp_socket);
-    msg_reply(&msg, &msg); /*Basic answer to the main thread*/
+    msg_reply(&msg, &msg); /* Basic answer to the main thread */
 
     return (void *) NULL;
 }

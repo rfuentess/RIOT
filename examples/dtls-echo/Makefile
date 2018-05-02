@@ -49,7 +49,7 @@ CFLAGS += -DDTLS_DEFAULT_PORT=$(DTLS_PORT)
 # This adds support for TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
 # CFLAGS += -DDTLS_ECC
 
-# Define the log entry for tinydtls.
+# Define the log entry for the tinydtls package.
 # Values: 0:EMERG (Default), 1:ALERT 2:CRIT 3:WARN 4:NOTICE 5:INFO 6:DEBUG
 TINYDTLS_LOG ?= 0
 

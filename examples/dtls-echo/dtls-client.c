@@ -92,14 +92,12 @@ static int _events_handler(struct dtls_context_t *ctx,
         dtls_connected = 1;
         DEBUG("CLIENT: DTLS Channel established!\n");
     }
-#if ENABLE_DEBUG
     /* At least a DTLS Client Hello was prepared? */
-    else if (code == DTLS_EVENT_CONNECT) {
+    else if ((ENABLE_DEBUG) && (code == DTLS_EVENT_CONNECT)) {
         DEBUG("CLIENT: DTLS Channel started\n");
     }
-#endif
 
-    /*TODO: DTLS_EVENT_RENEGOTIATE */
+    /*NOTE: DTLS_EVENT_RENEGOTIATE can be handled here */
 
     return 0;
 }
@@ -150,11 +148,11 @@ static void dtls_handle_read(dtls_context_t *ctx, uint8_t *packet,
         return;
     }
 
-#if ENABLE_DEBUG
-    DEBUG("DBG-Client: Msg received from \n\t Addr Src: [");
-    ipv6_addr_print(&session.addr);
-    DEBUG("]:%u\n", &remote.port);
-#endif
+    if (ENABLE_DEBUG) {
+        DEBUG("DBG-Client: Msg received from \n\t Addr Src: [");
+        ipv6_addr_print(&session.addr);
+        DEBUG("]:%u\n", remote.port);
+    }
 
     dtls_handle_message(ctx, &session, packet, (int)size);
 
@@ -261,10 +259,8 @@ static int _read_from_peer_handler(struct dtls_context_t *ctx,
     (void) ctx;
     (void) session;
 
-    size_t i;
-
     printf("Client: got DTLS Data App -- ");
-    for (i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
 #ifndef COAP_MSG_SPOOF
         printf("%c", data[i]);
 #else
@@ -560,7 +556,7 @@ static void client_send(char *addr_str, char *data,
      */
 
     /* Release resources (strict order!) */
-    dtls_free_context(dtls_context); /* This also send a DTLS Alert record */
+    dtls_free_context(dtls_context); /* This also sends a DTLS Alert record */
     sock_udp_close(&sock);
     dtls_connected = 0;
     DEBUG("Client DTLS session finished\n");
