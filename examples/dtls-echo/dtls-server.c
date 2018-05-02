@@ -406,7 +406,7 @@ void *_dtls_server_wrapper(void *arg)
                         break;
 
                     default:
-                        printf("ERROR: unexpected code error: %i\n", pckt_rcvd_size);
+                        printf("ERROR: unexpected code error: %zd\n", pckt_rcvd_size);
                         break;
                 } /* END-Switch */
             } /*END-Else (sock_udp_recv) */

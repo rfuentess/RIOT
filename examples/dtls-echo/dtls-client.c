@@ -312,12 +312,12 @@ static int _send_to_peer_handler(struct dtls_context_t *ctx,
     sock_udp_t *sock;
     sock = (sock_udp_t *)dtls_get_app_data(ctx);
 
-    len = sock_udp_send(sock, buf, len, NULL);
-    if (len <= 0) {
+    ssize_t res = sock_udp_send(sock, buf, len, NULL);
+    if (res <= 0) {
         puts("ERROR: Unable to send DTLS record");
     }
 
-    return len;
+    return res;
 }
 
 /* DTLS variables are initialized. */
@@ -527,7 +527,7 @@ static void client_send(char *addr_str, char *data,
                     break;
 
                 default:
-                    printf("ERROR: unexpected code error: %i\n", pckt_rcvd_size);
+                    printf("ERROR: unexpected code error: %zd \n", pckt_rcvd_size);
                     break;
             } /* END-Switch */
         } /*END-Else */
