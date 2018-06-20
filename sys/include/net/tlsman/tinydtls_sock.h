@@ -115,7 +115,7 @@ void set_async_listening(void);
 /**
  * TODO
  */
-ssize_t load_stack(int *ciphersuites_list, size_t total, uint8_t flags);
+ssize_t load_stack(uint16_t *ciphersuites_list, size_t total, uint8_t flags);
 
 /**
  * @brief Creates the tinydtls context

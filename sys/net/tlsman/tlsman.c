@@ -24,7 +24,7 @@
 #include "debug.h"
 
 /* Defined in the net/tlsman/[a-z]*.h library */
-extern ssize_t load_stack(int *ciphersuites_list, size_t total, uint8_t flags);
+extern ssize_t load_stack(uint16_t *ciphersuites_list, size_t total, uint8_t flags);
 extern ssize_t init_context(tlsman_session_t *session, tlsman_resp_handler_t resp_cb,
                      const uint8_t flags);
 extern ssize_t connect(tlsman_session_t *session, uint8_t flags,
@@ -55,14 +55,14 @@ extern void set_async_listening(void);
 #endif /* SOCK_HAS_ASYNC */
 
 ssize_t tlsman_load_stack(tlsman_driver_t *session,
-                                   int *ciphersuites_list, size_t total,
+                                   uint16_t *ciphersuites_list, size_t total,
                                    uint8_t flags)
 {
 
     session->tlsman_load_stack = load_stack;
     session->tlsman_init_context = init_context;
     session->tlsman_create_channel = connect;
-#if defined(SOCK_HAS_ASYNC) || defined(DOXYGEN)
+#ifdef SOCK_HAS_ASYNC
     session->tlsman_set_async_parameters = set_async_parameters;
     session->tlsman_set_async_listening = set_async_listening;
 #endif /* SOCK_HAS_ASYNC */

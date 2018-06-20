@@ -440,7 +440,7 @@ ssize_t _tinydtls_handle_read(tinydtls_session_t *tinydtls_session,
  *
  * @return true if cipher suite is supported
  */
-bool _is_cipher_tinydtls(int cipher)
+bool _is_cipher_tinydtls(uint16_t cipher)
 {
 
 #if defined(DTLS_PSK)
@@ -796,9 +796,7 @@ ssize_t _tinydtls_rehandshake(tinydtls_session_t *dtls_session,
     return TLSMAN_ERROR_UNABLE_CONTEXT; /* TODO: New error type? */
 }
 
-////////////////////////
-
-ssize_t load_stack(int *ciphersuites_list, size_t total, uint8_t flags){
+ssize_t load_stack(uint16_t *ciphersuites_list, size_t total, uint8_t flags){
     bool match = false;
 
     if (!(flags & TLSMAN_FLAG_STACK_DTLS)) {

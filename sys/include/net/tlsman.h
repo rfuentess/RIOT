@@ -81,7 +81,7 @@ typedef struct tlsman_driver {
 
   tlsman_session_t session; /**  Abstract (D)TLS secure session between peers. */
 
-  ssize_t (*tlsman_load_stack)(int *ciphersuites_list, size_t total, uint8_t flags);
+  ssize_t (*tlsman_load_stack)(uint16_t *ciphersuites_list, size_t total, uint8_t flags);
 
   /**
    * Creates the (D)TLS context.
@@ -275,7 +275,7 @@ typedef struct tlsman_driver {
  *          not supported (or compiled) for the (D)TLS stack.
  */
 ssize_t tlsman_load_stack(tlsman_driver_t *session,
-                                   int *ciphersuites_list, size_t total,
+                                   uint16_t *ciphersuites_list, size_t total,
                                    uint8_t flags);
 
 /**
