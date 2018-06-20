@@ -136,6 +136,10 @@ endif
 ifneq (,$(filter tlsman,$(USEMODULE)))
     DIRS += net/tlsman
 endif
+ifneq (,$(filter sock_secure,$(USEMODULE)))
+    DIRS += net/sock/secure
+endif
+
 
 DIRS += $(dir $(wildcard $(addsuffix /Makefile, $(USEMODULE))))
 
