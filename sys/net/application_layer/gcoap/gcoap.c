@@ -28,7 +28,19 @@
 #include "random.h"
 #include "thread.h"
 
-#define ENABLE_DEBUG (0)
+#ifdef MODULE_SOCK_SECURE
+#include "net/sock/secure.h"
+
+/* FIXME: Move to its own auto_init? (but this part is not enough universal) */
+#define SECURE_CIPHER_PSK_IDS (0xC0A8)
+#define SECURE_CIPHER_RPK_IDS (0xC0AE)
+#define SECURE_CIPHER_LIST { SECURE_CIPHER_PSK_IDS, SECURE_CIPHER_RPK_IDS }
+
+extern int _ps_handler(int argc, char **argv);
+
+#endif /* MODULE_SOCK_SECURE */
+
+#define ENABLE_DEBUG (1)
 #include "debug.h"
 
 /* Return values used by the _find_resource function. */
@@ -66,6 +78,91 @@ static gcoap_listener_t _default_listener = {
     sizeof(_default_resources) / sizeof(_default_resources[0]),
     NULL
 };
+
+#ifdef MODULE_SOCK_SECURE
+sock_secure_session_t secure_client = { .flag=0, .cb=NULL};
+sock_secure_session_t secure_server = { .flag=0, .cb=NULL};
+
+static void _dtls_data_app_handler(uint8_t *buf, size_t bufsize, void *sock)
+{
+    /* FIXME: Equivalent to void _listen(), create _proccess_raw_pkt()? */
+    ssize_t res = bufsize;
+    coap_pkt_t pdu;
+    gcoap_request_memo_t *memo = NULL;
+
+    /* FIXME Is it Irrelevant who call this function? (client/server) */
+    sock_udp_ep_t *remote = (sock_udp_ep_t *)&secure_client.session.session.remote; /* FIXME */
+
+
+    res = coap_parse(&pdu, buf, res);
+    if (res < 0) {
+        DEBUG("gcoap: parse failure: %d\n", (int)res);
+        /* If a response, can't clear memo, but it will timeout later. */
+        return;
+    }
+
+    if (pdu.hdr->code == COAP_CODE_EMPTY) {
+        DEBUG("gcoap: empty messages not handled yet\n");
+        return;
+    }
+
+    /* validate class and type for incoming */
+    switch (coap_get_code_class(&pdu)) {
+    /* incoming request */
+    case COAP_CLASS_REQ:
+        if (coap_get_type(&pdu) == COAP_TYPE_NON
+                || coap_get_type(&pdu) == COAP_TYPE_CON) {
+            size_t pdu_len = _handle_req(&pdu, buf, sizeof(buf), remote);
+            if (pdu_len > 0) {
+                ssize_t bytes = sock_udp_send(sock, buf, pdu_len, remote);
+                if (bytes <= 0) {
+                    DEBUG("gcoap: send response failed: %d\n", (int)bytes);
+                }
+            }
+        }
+        else {
+            DEBUG("gcoap: illegal request type: %u\n", coap_get_type(&pdu));
+        }
+        break;
+
+    /* incoming response */
+    case COAP_CLASS_SUCCESS:
+    case COAP_CLASS_CLIENT_FAILURE:
+    case COAP_CLASS_SERVER_FAILURE:
+        _find_req_memo(&memo, &pdu, remote);
+        if (memo) {
+            switch (coap_get_type(&pdu)) {
+            case COAP_TYPE_NON:
+            case COAP_TYPE_ACK:
+                xtimer_remove(&memo->response_timer);
+                memo->state = GCOAP_MEMO_RESP;
+                if (memo->resp_handler) {
+                    memo->resp_handler(memo->state, &pdu, remote);
+                }
+
+                if (memo->send_limit >= 0) {        /* if confirmable */
+                    *memo->msg.data.pdu_buf = 0;    /* clear resend PDU buffer */
+                }
+                memo->state = GCOAP_MEMO_UNUSED;
+                break;
+            case COAP_TYPE_CON:
+                DEBUG("gcoap: separate CON response not handled yet\n");
+                break;
+            default:
+                DEBUG("gcoap: illegal response type: %u\n", coap_get_type(&pdu));
+                break;
+            }
+        }
+        else {
+            DEBUG("gcoap: msg not found for ID: %u\n", coap_get_id(&pdu));
+        }
+        break;
+    default:
+        DEBUG("gcoap: illegal code class: %u\n", coap_get_code_class(&pdu));
+    }
+}
+
+#endif /* MODULE_SOCK_SECURE */
 
 /* Container for the state of gcoap itself */
 typedef struct {
@@ -109,8 +206,11 @@ static void *_event_loop(void *arg)
     memset(&local, 0, sizeof(sock_udp_ep_t));
     local.family = AF_INET6;
     local.netif  = SOCK_ADDR_ANY_NETIF;
+#ifdef MODULE_SOCK_SECURE
+    local.port   = GCOAP_PORT + 1;
+#else
     local.port   = GCOAP_PORT;
-
+#endif
     int res = sock_udp_create(&_sock, &local, NULL, 0);
     if (res < 0) {
         DEBUG("gcoap: cannot create sock: %d\n", res);
@@ -153,6 +253,7 @@ static void *_event_loop(void *arg)
                 break;
             }
             default:
+                DEBUG("%s: unknown case %i\n", __func__, res);
                 break;
             }
         }
@@ -166,11 +267,28 @@ static void *_event_loop(void *arg)
 /* Listen for an incoming CoAP message. */
 static void _listen(sock_udp_t *sock)
 {
+    uint8_t open_reqs = gcoap_op_state();
+
+#ifdef MODULE_SOCK_SECURE
+
+  (void) sock;
+  /* TODO: Determine when we are listen on server mode and when on client mode */
+
+    /* TODO: Add ssupport for
+        open_reqs > 0 ? GCOAP_RECV_TIMEOUT : SOCK_NO_TIMEOUT,
+     */
+     (void) open_reqs;
+
+     // ssize_t res = -1;
+
+     /* Manually force the thread to sleep, until the secure channel is ready */
+     thread_sleep();
+
+#else /* MODULE_SOCK_SECURE */
+    gcoap_request_memo_t *memo = NULL;
+    sock_udp_ep_t remote;
     coap_pkt_t pdu;
     uint8_t buf[GCOAP_PDU_BUF_SIZE];
-    sock_udp_ep_t remote;
-    gcoap_request_memo_t *memo = NULL;
-    uint8_t open_reqs = gcoap_op_state();
 
     /* We expect a -EINTR response here when unlimited waiting (SOCK_NO_TIMEOUT)
      * is interrupted when sending a message in gcoap_req_send2(). While a
@@ -255,6 +373,7 @@ static void _listen(sock_udp_t *sock)
     default:
         DEBUG("gcoap: illegal code class: %u\n", coap_get_code_class(&pdu));
     }
+#endif /* MODULE_SOCK_SECURE */
 }
 
 /*
@@ -704,6 +823,22 @@ kernel_pid_t gcoap_init(void)
     /* randomize initial value */
     atomic_init(&_coap_state.next_message_id, (unsigned)random_uint32());
 
+#ifdef MODULE_SOCK_SECURE
+  /* Specific initialization for [g|nano]CoAP (FIXME Trt to reuse code?) */
+    secure_server.flag = TLSMAN_FLAG_STACK_DTLS | TLSMAN_FLAG_SIDE_SERVER;
+    secure_client.flag = TLSMAN_FLAG_STACK_DTLS | TLSMAN_FLAG_SIDE_CLIENT;
+    uint16_t ciphers[] = SECURE_CIPHER_LIST;
+    /*
+     *FIXME: This API does not have sense with this approach
+     *       secure_[client|server] is required only due the flag field which
+     *       we only care for the lower layer (TCP, UDP, etc.)
+     *       And sock_secure_initialized() will eventually set the correct state
+     *       for each one
+     */
+    DEBUG("%s: Loading DTLS stack!\n",__func__);
+    sock_secure_load_stack(&secure_client, ciphers, sizeof(ciphers));
+#endif /* MODULE_SOCK_SECURE */
+
     return _pid;
 }
 
@@ -797,6 +932,17 @@ size_t gcoap_req_send2(const uint8_t *buf, size_t len,
     gcoap_request_memo_t *memo = NULL;
     assert(remote != NULL);
 
+#ifdef MODULE_SOCK_SECURE
+    /*  NOTE: This is the call for the client
+     * TODO: Check the status of the channel (tlsman is not finished yet)
+    */
+    ssize_t res = sock_secure_initialized(&secure_client,
+                            _dtls_data_app_handler, /* Universal for gcoap client/server */
+                            (void *)&_sock,
+                            NULL, /* FIXME The local can be ignored by TLSMAN  */
+                            (sock_secure_ep_t *)remote);
+#endif /* MODULE_SOCK_SECURE */
+
     /* Find empty slot in list of open requests. */
     mutex_lock(&_coap_state.lock);
     for (int i = 0; i < GCOAP_REQ_WAITING_MAX; i++) {
@@ -857,7 +1003,16 @@ size_t gcoap_req_send2(const uint8_t *buf, size_t len,
     }
 
     /* Memos complete; send msg and start timer */
-    ssize_t res = sock_udp_send(&_sock, buf, len, remote);
+#ifdef MODULE_SOCK_SECURE
+   sock_secure_write(&secure_client, buf, len);
+   /* NOTE:  sock_secure_write involves establishing the secure channel */
+
+   /* FIXME */
+   xtimer_usleep(GCOAP_MSG_TYPE_TIMEOUT);
+   res  = sock_secure_read(&secure_client);
+#else /* MODULE_SOCK_SECURE */
+    ssize_t res  = sock_udp_send(&_sock, buf, len, remote);
+
 
     if ((res > 0) && (timeout > 0)) {     /* timeout may be zero for non-confirmable */
         /* We assume gcoap_req_send2() is called on some thread other than
@@ -889,6 +1044,14 @@ size_t gcoap_req_send2(const uint8_t *buf, size_t len,
         memo->state = GCOAP_MEMO_UNUSED;
         DEBUG("gcoap: sock send failed: %d\n", (int)res);
     }
+#endif /* MODULE_SOCK_SECURE */
+
+#ifdef MODULE_SOCK_SECURE
+     /* TODO This should be handled by the application */
+     DEBUG("%s: Releasing secure channel resources (fixme)\n",__func__);
+     sock_secure_release(&secure_client); /* FIXME: Remove this */
+#endif
+
     return (size_t)((res > 0) ? res : 0);
 }
 
