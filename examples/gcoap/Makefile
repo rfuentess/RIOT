@@ -39,6 +39,14 @@ USEMODULE += shell
 USEMODULE += shell_commands
 USEMODULE += ps
 
+USEMODULE += sock_secure
+
+ifneq (,$(filter sock_secure,$(USEMODULE)))
+  USEPKG += tinydtls
+  INCLUDES += -I$(APPDIR)/../sock_secure/keys
+	CFLAGS += -DTHREAD_STACKSIZE_MAIN=\(4*THREAD_STACKSIZE_DEFAULT\)
+endif
+
 # Comment this out to disable code in RIOT that does safety checking
 # which is not needed in a production environment but helps in the
 # development process:
