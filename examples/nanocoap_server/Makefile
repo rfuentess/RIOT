@@ -54,16 +54,17 @@ endif
 QUIET ?= 1
 
 #Enable support for DTLS
-USEMODULE += sock_secure
-
-ifneq (,$(filter sock_secure,$(USEMODULE)))
-  USEPKG += tinydtls
-  INCLUDES += -I$(APPDIR)/../sock_secure/keys
-	CFLAGS += -DTHREAD_STACKSIZE_MAIN=\(3*THREAD_STACKSIZE_DEFAULT\)
-
-	#Just for parsing when ENABLE_DEBUG is used
-	USEMODULE += od
-endif
+#USEMODULE += sock_secure
+#
+#ifneq (,$(filter sock_secure,$(USEMODULE)))
+#  USEPKG += tinydtls
+#  INCLUDES += -I$(APPDIR)/../sock_secure/keys
+#  CFLAGS += -DTHREAD_STACKSIZE_MAIN=\(3*THREAD_STACKSIZE_DEFAULT\)
+#  #CFLAGS += -DTINYDTLS_DEBUG
+#
+##Just for parsing when ENABLE_DEBUG is used
+#  USEMODULE += od
+#endif
 
 include $(RIOTBASE)/Makefile.include
 
